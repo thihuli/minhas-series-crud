@@ -10,7 +10,8 @@ function InfoSerie({ match }) {
   const [sucsess, setSuccess] = useState(false);
   const [data, setData] = useState({});
   const [mode, setMode] = useState('EDIT');
-  const [genres, setGenres] = useState([])
+  const [genres, setGenres] = useState([]);
+  const [genreId, setGenreId] = useState('');
 
   useEffect(() => {
     axios.get(`/api/series/${match.params.id}`)
@@ -24,8 +25,13 @@ function InfoSerie({ match }) {
     axios.get('/api/genres')
       .then(res => {
         setGenres(res.data.data)
+        const listGenres = res.data.data
+        const correctGenre = listGenres.find(value => data.genre === value.name)
+        if(correctGenre) {
+          setGenreId(correctGenre.id)
+        }
       })
-  },[])
+  }, [data])
 
   const masterHeader = {
     height: '50vh',
@@ -37,7 +43,10 @@ function InfoSerie({ match }) {
   }
 
   const save = () => {
-    axios.put(`/api/series/${match.params.id}`, form)
+    axios.put(`/api/series/${match.params.id}`, {
+      ...form,
+      genre_id: genreId
+    })
       .then(res => {
         setSuccess(!sucsess)
       })
@@ -47,6 +56,13 @@ function InfoSerie({ match }) {
     setForm({
       ...form,
       [field]: e.target.value
+    })
+  }
+
+  const selected = value => () => {
+    setForm({
+      ...form,
+      status: value
     })
   }
 
@@ -100,9 +116,21 @@ function InfoSerie({ match }) {
               <label htmlFor="name">Gêneros</label>
               <select className="form-control" onClick={onChange('genre_id')}>
                 {genres.map(genre => <option key={genre.id} value={genre.id} select={genre.id === form.genre}>{genre.name}</option>)}
-                
               </select>
+              <div className="form-check">
+                <input className="form-check-input" type="radio" name="status" id='assistido' value='ASSISTIDO' onClick={selected('ASSISTIDO')} />
+                <label className="form-check-label" htmlFor='assistido'>
+                  Assistido
+                </label>
+              </div>
+              <div className="form-check">
+                <input className="form-check-input" type="radio" name="status" id="aAssisitr" value='A_ASSISTIR' onClick={selected('A_ASSISTIR')}/>
+                <label className="form-check-label" htmlFor='aAssistir'>
+                  A assistir
+                </label>
+              </div>
             </div>
+
             <button type="button" onClick={save} className='btn btn-primary'>Salvar</button>
             <button className='btn btn-primary' onClick={() => setMode('INFO')}>Cancelar</button>
           </form>
